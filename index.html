@@ -10,6 +10,10 @@
     <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <!-- Supabase Auth / database client -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <!-- App configuration: fill these after creating your Supabase project. -->
+    <script>window.ZEN_SUPABASE_URL = "https://nnaycvczfzygdkkotbnd.supabase.co"; window.ZEN_SUPABASE_PUBLISHABLE_KEY = "sb_publishable_9EY1uaCmT37FNxNX4Y_bRA_tR1VIvbd";</script>
     <!-- Lucide Icons -->
     <script src="https://unpkg.com/lucide@latest"></script>
 </head>
@@ -23,14 +27,6 @@
             en: {
                 title: "Zen Release",
                 langToggle: "中文",
-                loginTitle: "Welcome to Zen Release",
-                signupTab: "Sign Up",
-                loginTab: "Log In",
-                userId: "User ID",
-                password: "Password",
-                loginBtn: "Log In",
-                signupBtn: "Sign Up",
-                logout: "Log Out",
                 newGoal: "What do you want to achieve or release?",
                 deadline: "Deadline (Optional)",
                 add: "Add Goal",
@@ -62,21 +58,11 @@
                 time: "time",
                 backup: "Backup Data",
                 restore: "Restore Data",
-                userExists: "User ID already exists!",
-                invalidCreds: "Invalid User ID or Password!",
-                signupSuccess: "Account created successfully! Please log in."
+                account: "Account", signUp: "Create account", login: "Log in", email: "Email address", password: "Password", confirmPassword: "Confirm password", forgotPassword: "Forgot password?", sendReset: "Send reset email", signOut: "Log out", haveAccount: "Already have an account? Log in", needAccount: "New here? Create an account", verifySent: "Check your email for the verification link, then return here to log in.", resetSent: "If that email is registered, a password reset link has been sent.", authSetup: "Authentication setup required", authSetupText: "Add your Supabase project URL and publishable key to this file, then configure email confirmation and the redirect URL in Supabase.", setupStep1: "Create a Supabase project", setupStep2: "Run the SQL file supplied with this app in Supabase SQL Editor", setupStep3: "Set your Vercel website URL in Supabase Auth URL Configuration", setupStep4: "Replace the two YOUR_SUPABASE placeholders in index.html", signedInAs: "Signed in as", syncing: "Loading your saved goals…", cloudError: "Could not load or save your cloud data. Please check your connection and Supabase setup.", migrateLocal: "We found goals saved in this browser. Import them into your account? Choose Cancel to keep the account empty.", accountReady: "Your account is ready. Please check your email and verify the address before logging in.", authRequired: "Please log in to access your cloud-saved goals.", passwordMismatch: "The passwords do not match.", passwordLength: "Use a password with at least 8 characters.", backToLogin: "Back to log in", configMissing: "Supabase is not configured yet. Your original local app is still available below; sign-up and cloud sync will activate after setup."
             },
             zh: {
                 title: "正念释放",
                 langToggle: "EN",
-                loginTitle: "欢迎来到正念释放",
-                signupTab: "注册账号",
-                loginTab: "登录账号",
-                userId: "用户名 / 账号",
-                password: "密码",
-                loginBtn: "登录",
-                signupBtn: "注册",
-                logout: "退出登录",
                 newGoal: "你想实现或释放什么目标？",
                 deadline: "实现期限 (可选)",
                 add: "添加目标",
@@ -108,22 +94,25 @@
                 time: "次激活",
                 backup: "备份数据",
                 restore: "恢复备份",
-                userExists: "该用户名已被注册！",
-                invalidCreds: "用户名或密码错误！",
-                signupSuccess: "注册成功！请登录。"
+                account: "账户", signUp: "注册账户", login: "登录", email: "电子邮箱", password: "密码", confirmPassword: "确认密码", forgotPassword: "忘记密码？", sendReset: "发送重置邮件", signOut: "退出登录", haveAccount: "已有账户？前往登录", needAccount: "还没有账户？立即注册", verifySent: "请检查邮箱并点击验证链接，然后返回此处登录。", resetSent: "如果该邮箱已注册，系统已发送密码重置链接。", authSetup: "需要完成身份验证设置", authSetupText: "创建 Supabase 项目后，将项目 URL 和公开密钥填入此文件，并在 Supabase 中设置邮箱验证及重定向地址。", setupStep1: "创建 Supabase 项目", setupStep2: "在 Supabase SQL Editor 执行本应用附带的 SQL 文件", setupStep3: "在 Supabase Auth URL Configuration 设置 Vercel 网站地址", setupStep4: "替换 index.html 中两个 YOUR_SUPABASE 占位值", signedInAs: "当前登录", syncing: "正在加载已保存的目标…", cloudError: "无法加载或保存云端数据，请检查网络及 Supabase 设置。", migrateLocal: "发现此浏览器中已有目标记录。要导入到此账户吗？选择取消则保持账户为空。", accountReady: "账户已创建。请检查邮箱并完成验证后再登录。", authRequired: "请先登录以访问云端保存的目标。", passwordMismatch: "两次输入的密码不一致。", passwordLength: "密码至少需要 8 个字符。", backToLogin: "返回登录", configMissing: "尚未设置 Supabase。原有本地功能仍可使用；完成设置后即可启用注册和云端同步。"
             }
         };
 
         function App() {
             const [lang, setLang] = useState('zh');
-            const [currentUser, setCurrentUser] = useState(null);
-            
             const [authMode, setAuthMode] = useState('login');
-            const [usernameInput, setUsernameInput] = useState('');
-            const [passwordInput, setPasswordInput] = useState('');
+            const [authEmail, setAuthEmail] = useState('');
+            const [authPassword, setAuthPassword] = useState('');
+            const [authPasswordConfirm, setAuthPasswordConfirm] = useState('');
+            const [authMessage, setAuthMessage] = useState('');
             const [authError, setAuthError] = useState('');
-            const [authSuccess, setAuthSuccess] = useState('');
-
+            const [authBusy, setAuthBusy] = useState(false);
+            const [authUser, setAuthUser] = useState(null);
+            const [authInitialized, setAuthInitialized] = useState(false);
+            const [cloudReady, setCloudReady] = useState(false);
+            const [cloudLoadFailed, setCloudLoadFailed] = useState(false);
+            const supabaseConfigured = !!(window.ZEN_SUPABASE_URL && window.ZEN_SUPABASE_PUBLISHABLE_KEY && !window.ZEN_SUPABASE_URL.includes('YOUR_SUPABASE') && !window.ZEN_SUPABASE_PUBLISHABLE_KEY.includes('YOUR_SUPABASE') && window.supabase);
+            const supabaseClient = React.useMemo(() => supabaseConfigured ? window.supabase.createClient(window.ZEN_SUPABASE_URL, window.ZEN_SUPABASE_PUBLISHABLE_KEY) : null, []);
             const [goals, setGoals] = useState([]);
             const [newGoalText, setNewGoalText] = useState('');
             const [newGoalDate, setNewGoalDate] = useState('');
@@ -134,31 +123,112 @@
             const [loopCount, setLoopCount] = useState(0);
 
             useEffect(() => {
-                const loggedIn = localStorage.getItem('zen_current_user');
-                if (loggedIn) {
-                    setCurrentUser(loggedIn);
-                    loadUserData(loggedIn);
+                const saved = localStorage.getItem('zenGoals_local_tool');
+                if (saved) {
+                    try { setGoals(JSON.parse(saved)); } catch (e) { console.error('Could not read local Zen Release data', e); }
                 }
             }, []);
 
-            const loadUserData = (username) => {
-                const userGoalsKey = `zen_goals_${username}`;
-                const saved = localStorage.getItem(userGoalsKey);
-                if (saved) {
-                    try { setGoals(JSON.parse(saved)); } catch (e) { setGoals([]); }
-                } else {
-                    setGoals([]);
+            // Keep the legacy local-only behavior when Supabase has not yet been configured.
+            // Once configured, authenticated user data is stored in the user-protected cloud table instead.
+            useEffect(() => {
+                if (!supabaseConfigured) localStorage.setItem('zenGoals_local_tool', JSON.stringify(goals));
+            }, [goals, supabaseConfigured]);
+
+            useEffect(() => {
+                if (!supabaseClient) { setAuthInitialized(true); return; }
+                let alive = true;
+                supabaseClient.auth.getSession().then(({ data, error }) => {
+                    if (!alive) return;
+                    if (error) setAuthError(error.message);
+                    setAuthUser(data?.session?.user || null);
+                    setAuthInitialized(true);
+                });
+                const { data: listener } = supabaseClient.auth.onAuthStateChange((_event, session) => {
+                    if (!alive) return;
+                    const nextUser = session?.user || null;
+                    setAuthUser(nextUser);
+                    setAuthError('');
+                    if (!nextUser) { setGoals([]); setCloudReady(false); }
+                });
+                return () => { alive = false; listener?.subscription?.unsubscribe(); };
+            }, [supabaseClient]);
+
+            useEffect(() => {
+                if (!supabaseClient || !authUser) return;
+                let cancelled = false;
+                setCloudReady(false);
+                setCloudLoadFailed(false);
+                (async () => {
+                    const { data, error } = await supabaseClient.from('zen_release_data').select('goals').eq('user_id', authUser.id).maybeSingle();
+                    if (cancelled) return;
+                    if (error) {
+                        console.error(error);
+                        setAuthError((lang === 'zh' ? '云端数据读取失败：' : 'Cloud data could not be loaded: ') + error.message);
+                        setCloudLoadFailed(true);
+                        setCloudReady(false);
+                        return;
+                    }
+                    if (data) {
+                        setGoals(Array.isArray(data.goals) ? data.goals : []);
+                    } else {
+                        let local = [];
+                        try { local = JSON.parse(localStorage.getItem('zenGoals_local_tool') || '[]'); } catch (_) {}
+                        if (Array.isArray(local) && local.length && window.confirm(getText('migrateLocal'))) {
+                            setGoals(local);
+                        } else {
+                            setGoals([]);
+                        }
+                    }
+                    setCloudReady(true);
+                })();
+                return () => { cancelled = true; };
+            }, [supabaseClient, authUser?.id]);
+
+            useEffect(() => {
+                if (!supabaseClient || !authUser || !cloudReady) return;
+                const save = async () => {
+                    const { error } = await supabaseClient.from('zen_release_data').upsert({ user_id: authUser.id, goals, updated_at: new Date().toISOString() }, { onConflict: 'user_id' });
+                    if (error) {
+                        console.error(error);
+                        setAuthError((lang === 'zh' ? '云端保存失败：' : 'Cloud save failed: ') + error.message);
+                    }
+                };
+                save();
+            }, [goals, authUser?.id, cloudReady, supabaseClient]);
+
+            const handleAuthSubmit = async (e) => {
+                e.preventDefault();
+                setAuthError(''); setAuthMessage('');
+                if (!supabaseClient) return;
+                const email = authEmail.trim();
+                if (authMode === 'signup') {
+                    if (authPassword.length < 8) { setAuthError(getText('passwordLength')); return; }
+                    if (authPassword !== authPasswordConfirm) { setAuthError(getText('passwordMismatch')); return; }
                 }
+                setAuthBusy(true);
+                try {
+                    if (authMode === 'signup') {
+                        const { error } = await supabaseClient.auth.signUp({ email, password: authPassword, options: { emailRedirectTo: window.location.origin + window.location.pathname } });
+                        if (error) throw error;
+                        setAuthMessage(getText('verifySent'));
+                        setAuthMode('login'); setAuthPassword(''); setAuthPasswordConfirm('');
+                    } else if (authMode === 'login') {
+                        const { error } = await supabaseClient.auth.signInWithPassword({ email, password: authPassword });
+                        if (error) throw error;
+                    }
+                } catch (err) { setAuthError(err.message || 'Authentication failed.'); }
+                finally { setAuthBusy(false); }
+            };
+
+            const handleSignOut = async () => {
+                if (!supabaseClient) return;
+                const { error } = await supabaseClient.auth.signOut();
+                if (error) setAuthError(error.message);
+                setGoals([]);
             };
 
             useEffect(() => {
-                if (currentUser) {
-                    localStorage.setItem(`zen_goals_${currentUser}`, JSON.stringify(goals));
-                }
-            }, [goals, currentUser]);
-
-            useEffect(() => {
-                if (!currentUser) return;
                 const today = new Date().toISOString().split('T')[0];
                 setGoals(prev => prev.map(g => {
                     if (g.status === 'active' && g.deadline && g.deadline < today) {
@@ -166,14 +236,343 @@
                     }
                     return g;
                 }));
-            }, [currentUser]);
+            }, []);
 
             const getText = (key) => t[lang][key];
 
-            const handleSignup = (e) => {
+            const handleAddGoal = (e) => {
                 e.preventDefault();
-                setAuthError('');
-                setAuthSuccess('');
-                if (!usernameInput.trim() || !passwordInput.trim()) return;
+                if (!newGoalText.trim()) return;
+                const newGoal = {
+                    id: Date.now().toString(),
+                    text: newGoalText,
+                    createdAt: new Date().toISOString().split('T')[0],
+                    deadline: newGoalDate || null,
+                    status: 'active',
+                    activationCount: 1,
+                    history: []
+                };
+                setGoals([newGoal, ...goals]);
+                setNewGoalText('');
+                setNewGoalDate('');
+            };
 
-                let users = {};
+            const updateGoalStatus = (id, newStatus) => {
+                setGoals(goals.map(g => g.id === id ? { ...g, status: newStatus } : g));
+            };
+
+            const reactivateGoal = (id) => {
+                setGoals(goals.map(g => {
+                    if (g.id === id) {
+                        return { 
+                            ...g, 
+                            status: 'active', 
+                            activationCount: (g.activationCount || 1) + 1,
+                            deadline: '' 
+                        };
+                    }
+                    return g;
+                }));
+            };
+
+            const deleteGoal = (id) => {
+                if (confirm(lang === 'zh' ? '确定要删除这个目标吗？' : 'Are you sure you want to delete this goal?')) {
+                    setGoals(goals.filter(g => g.id !== id));
+                }
+            };
+
+            const exportData = () => {
+                const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(goals, null, 2));
+                const downloadAnchor = document.createElement('a');
+                downloadAnchor.setAttribute("href", dataStr);
+                downloadAnchor.setAttribute("download", `zen_release_backup_${new Date().toISOString().split('T')[0]}.json`);
+                document.body.appendChild(downloadAnchor);
+                downloadAnchor.click();
+                downloadAnchor.remove();
+            };
+
+            const importData = (e) => {
+                const fileReader = new FileReader();
+                if (e.target.files[0]) {
+                    fileReader.readAsText(e.target.files[0], "UTF-8");
+                    fileReader.onload = (event) => {
+                        try {
+                            const imported = JSON.parse(event.target.result);
+                            if (Array.isArray(imported)) {
+                                setGoals(imported);
+                                alert(lang === 'zh' ? "数据导入成功！" : "Data restored successfully!");
+                            }
+                        } catch (error) {
+                            alert(lang === 'zh' ? "文件格式错误" : "Invalid file format");
+                        }
+                    };
+                }
+            };
+
+            const startRelease = (goal, presetDesire = '') => {
+                setActiveRelease(goal);
+                setCurrentDesire(presetDesire);
+                setLoopCount(1);
+                setWizardStep(presetDesire ? 2 : 1);
+            };
+
+            const handleDesireSelect = (desireKey) => {
+                setCurrentDesire(getText(desireKey));
+                setWizardStep(2);
+            };
+
+            const handleEmotionLeft = (left) => {
+                if (left) {
+                    setWizardStep(3); 
+                } else {
+                    setLoopCount(prev => prev + 1);
+                }
+            };
+
+            const handleContinue = (wantsToContinue) => {
+                if (wantsToContinue) {
+                    setLoopCount(prev => prev + 1);
+                    setWizardStep(1); 
+                    setCurrentDesire('');
+                } else {
+                    finishReleaseSession();
+                }
+            };
+
+            const finishReleaseSession = () => {
+                setGoals(goals.map(g => {
+                    if (g.id === activeRelease.id) {
+                        return {
+                            ...g,
+                            history: [{
+                                date: new Date().toISOString().split('T')[0],
+                                desire: currentDesire || 'General',
+                                loops: loopCount
+                            }, ...g.history]
+                        };
+                    }
+                    return g;
+                }));
+                setActiveRelease(null);
+                setWizardStep(0);
+            };
+
+            if (supabaseConfigured && authUser && cloudLoadFailed) {
+                return <div className="min-h-screen flex items-center justify-center p-6 bg-slate-50 text-slate-700"><div className="bg-white rounded-2xl shadow-sm border border-red-100 p-8 max-w-md w-full"><div className="text-teal-700 text-xl font-semibold mb-3">Zen Release · 正念释放</div><p role="alert" className="text-red-700 text-sm break-words">{authError}</p><p className="text-sm text-slate-500 mt-3">Check that you ran supabase-setup.sql and that your project URL and publishable key are correct.</p><button onClick={handleSignOut} className="mt-5 w-full bg-slate-800 text-white rounded-lg py-3">{getText('signOut')}</button></div></div>;
+            }
+
+            if (supabaseConfigured && (!authInitialized || (authUser && !cloudReady))) {
+                return <div className="min-h-screen flex items-center justify-center p-6 bg-slate-50 text-slate-700"><div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-8 max-w-md w-full text-center"><div className="text-teal-700 text-xl font-semibold mb-3">Zen Release · 正念释放</div><p>{getText('syncing')}</p></div></div>;
+            }
+
+            if (supabaseConfigured && !authUser) {
+                return (
+                    <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4 text-slate-800">
+                        <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-7 md:p-9 w-full max-w-md">
+                            <div className="text-center mb-7"><div className="inline-flex p-3 rounded-2xl bg-teal-50 text-teal-700 mb-3"><i data-lucide="refresh-cw" className="w-7 h-7"></i></div><h1 className="text-2xl font-semibold text-teal-700">Zen Release</h1><p className="text-sm text-slate-500 mt-2">{getText('account')}</p></div>
+                            <div className="flex gap-2 mb-6">{['login','signup'].map(mode => <button key={mode} type="button" onClick={() => {setAuthMode(mode);setAuthError('');setAuthMessage('');}} className={`flex-1 py-2 rounded-lg text-sm font-medium ${authMode===mode?'bg-teal-600 text-white':'bg-slate-100 text-slate-600'}`}>{mode==='login'?getText('login'):getText('signUp')}</button>)}</div>
+                            <form onSubmit={handleAuthSubmit} className="space-y-4">
+                                <label className="block text-sm font-medium">{getText('email')}<input type="email" required autoComplete="email" value={authEmail} onChange={e=>setAuthEmail(e.target.value)} className="mt-1 w-full bg-slate-50 border border-slate-200 rounded-lg px-4 py-3 outline-none focus:ring-2 focus:ring-teal-100" /></label>
+                                <label className="block text-sm font-medium">{getText('password')}<input type="password" required minLength="8" autoComplete={authMode==='signup'?'new-password':'current-password'} value={authPassword} onChange={e=>setAuthPassword(e.target.value)} className="mt-1 w-full bg-slate-50 border border-slate-200 rounded-lg px-4 py-3 outline-none focus:ring-2 focus:ring-teal-100" /></label>
+                                {authMode === 'signup' && <label className="block text-sm font-medium">{getText('confirmPassword')}<input type="password" required minLength="8" autoComplete="new-password" value={authPasswordConfirm} onChange={e=>setAuthPasswordConfirm(e.target.value)} className="mt-1 w-full bg-slate-50 border border-slate-200 rounded-lg px-4 py-3 outline-none focus:ring-2 focus:ring-teal-100" /></label>}
+                                {authError && <p role="alert" className="text-sm text-red-600 bg-red-50 p-3 rounded-lg break-words">{authError}</p>}
+                                {authMessage && <p role="status" className="text-sm text-teal-700 bg-teal-50 p-3 rounded-lg">{authMessage}</p>}
+                                <button disabled={authBusy} className="w-full bg-teal-600 text-white rounded-lg py-3 font-medium hover:bg-teal-700 disabled:opacity-60">{authBusy?'…':authMode==='login'?getText('login'):getText('signUp')}</button>
+                            </form>
+                            <p className="text-xs text-slate-400 text-center mt-6">Your goals and release history are private to your account.</p>
+                        </div>
+                    </div>
+                );
+            }
+
+            return (
+                <div className="min-h-screen bg-slate-50 text-slate-800 font-sans p-4 md:p-8">
+                    <div className="max-w-3xl mx-auto">
+                        
+                        <div className="flex justify-between items-center mb-8">
+                            <h1 className="text-2xl text-teal-700 tracking-wider flex items-center gap-2 font-semibold">
+                                <i data-lucide="refresh-cw" className="w-6 h-6"></i> {getText('title')}
+                            </h1>
+                            <div className="flex items-center gap-3">
+                                {authUser && <div className="hidden sm:flex items-center gap-2 text-xs text-slate-500 max-w-48"><i data-lucide="user-round" className="w-4 h-4"></i><span className="truncate" title={authUser.email}>{authUser.email}</span></div>}
+                                {authUser && <button onClick={handleSignOut} title={getText('signOut')} className="p-2 text-slate-500 hover:text-red-600 bg-white rounded-lg shadow-sm border border-slate-100 transition"><i data-lucide="log-out" className="w-4 h-4"></i></button>}
+                                <button onClick={exportData} title={getText('backup')} className="p-2 text-slate-500 hover:text-teal-600 bg-white rounded-lg shadow-sm border border-slate-100 transition">
+                                    <i data-lucide="download" className="w-4 h-4"></i>
+                                </button>
+                                <label className="p-2 text-slate-500 hover:text-teal-600 bg-white rounded-lg shadow-sm border border-slate-100 transition cursor-pointer" title={getText('restore')}>
+                                    <i data-lucide="upload" className="w-4 h-4"></i>
+                                    <input type="file" onChange={importData} accept=".json" className="hidden" />
+                                </label>
+                                <button 
+                                    onClick={() => setLang(lang === 'zh' ? 'en' : 'zh')}
+                                    className="flex items-center gap-1 text-sm bg-white px-3 py-1.5 rounded-lg shadow-sm border border-slate-100 text-slate-600 hover:text-teal-600 transition"
+                                >
+                                    <i data-lucide="globe" className="w-4 h-4"></i> {getText('langToggle')}
+                                </button>
+                            </div>
+                        </div>
+
+                        {!supabaseConfigured && <div className="mb-6 bg-amber-50 border border-amber-200 text-amber-900 rounded-xl p-4 text-sm"><strong>{getText('authSetup')}</strong><p className="mt-1">{getText('configMissing')}</p></div>}
+                        {authUser && authError && <div role="alert" className="mb-6 bg-red-50 border border-red-200 text-red-700 rounded-xl p-3 text-sm">{authError}</div>}
+                        <form onSubmit={handleAddGoal} className="bg-white p-6 rounded-xl shadow-sm border border-slate-100 mb-8 flex flex-col md:flex-row gap-4">
+                            <input
+                                type="text"
+                                value={newGoalText}
+                                onChange={(e) => setNewGoalText(e.target.value)}
+                                placeholder={getText('newGoal')}
+                                className="flex-1 bg-slate-50 border-none rounded-lg px-4 py-3 focus:ring-2 focus:ring-teal-100 outline-none text-slate-700"
+                            />
+                            <input
+                                type="date"
+                                value={newGoalDate}
+                                onChange={(e) => setNewGoalDate(e.target.value)}
+                                className="bg-slate-50 border-none rounded-lg px-4 py-3 focus:ring-2 focus:ring-teal-100 outline-none text-slate-500"
+                                title={getText('deadline')}
+                            />
+                            <button type="submit" className="bg-teal-600 text-white px-6 py-3 rounded-lg hover:bg-teal-700 transition flex justify-center items-center gap-2">
+                                <i data-lucide="plus" className="w-5 h-5"></i> {getText('add')}
+                            </button>
+                        </form>
+
+                        <div className="space-y-6">
+                            {goals.map(goal => (
+                                <div key={goal.id} className={`bg-white p-6 rounded-xl shadow-sm border-l-4 transition ${
+                                    goal.status === 'active' ? 'border-teal-400' : 
+                                    goal.status === 'expired' ? 'border-orange-400' : 'border-slate-300 opacity-70'
+                                }`}>
+                                    
+                                    <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-4">
+                                        <div>
+                                            <h3 className="text-lg font-medium text-slate-800">{goal.text}</h3>
+                                            <div className="flex flex-wrap gap-4 text-xs text-slate-400 mt-2">
+                                                <span className="flex items-center gap-1"><i data-lucide="calendar" className="w-3 h-3"></i> {getText('created')}: {goal.createdAt}</span>
+                                                <span className="flex items-center gap-1">
+                                                    <i data-lucide="target" className="w-3 h-3"></i> {getText('target')}: {goal.deadline ? goal.deadline : getText('noDeadline')}
+                                                </span>
+                                                {goal.activationCount > 1 && (
+                                                    <span className="text-teal-600 bg-teal-50 px-2 py-0.5 rounded font-medium">
+                                                        {lang === 'zh' ? `${getText('cycle')}${goal.activationCount}${getText('time')}` : `${getText('time')} ${goal.activationCount}`}
+                                                    </span>
+                                                )}
+                                                {goal.status === 'expired' && (
+                                                    <span className="text-orange-600 bg-orange-50 px-2 py-0.5 rounded font-medium">
+                                                        {lang === 'zh' ? '已逾期' : 'Expired'}
+                                                    </span>
+                                                )}
+                                            </div>
+                                        </div>
+                                        
+                                        <div className="flex flex-wrap items-center gap-2">
+                                            {goal.status === 'active' && (
+                                                <>
+                                                    <button onClick={() => updateGoalStatus(goal.id, 'achieved')} className="px-3 py-1.5 text-sm bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-lg flex items-center gap-1 transition">
+                                                        <i data-lucide="check" className="w-4 h-4"></i> {getText('markAchieved')}
+                                                    </button>
+                                                    <button onClick={() => startRelease(goal)} className="px-4 py-1.5 text-sm bg-teal-50 text-teal-700 hover:bg-teal-100 rounded-lg flex items-center gap-1 transition">
+                                                        <i data-lucide="refresh-cw" className="w-4 h-4"></i> {getText('release')}
+                                                    </button>
+                                                </>
+                                            )}
+                                            {goal.status === 'expired' && (
+                                                <>
+                                                    <button onClick={() => startRelease(goal, 'control')} className="px-3 py-1.5 text-sm bg-orange-50 text-orange-700 hover:bg-orange-100 rounded-lg transition font-medium">
+                                                        {getText('frustration')}
+                                                    </button>
+                                                    <button onClick={() => reactivateGoal(goal.id)} className="px-3 py-1.5 text-sm bg-teal-50 text-teal-700 hover:bg-teal-100 rounded-lg transition font-medium">
+                                                        {getText('reactivate')}
+                                                    </button>
+                                                </>
+                                            )}
+                                            {goal.status === 'achieved' && (
+                                                <span className="px-3 py-1.5 text-sm bg-teal-50 text-teal-700 rounded-lg font-medium">{getText('achieved')}</span>
+                                            )}
+                                            {/* 删除按钮 */}
+                                            <button onClick={() => deleteGoal(goal.id)} className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition" title={getText('delete')}>
+                                                <i data-lucide="trash-2" className="w-4 h-4"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+
+                                    {goal.history.length > 0 && (
+                                        <div className="mt-4 pt-4 border-t border-slate-100">
+                                            <p className="text-xs font-medium text-slate-400 mb-3 uppercase tracking-wider">{getText('history')}</p>
+                                            <div className="flex flex-wrap gap-2">
+                                                {goal.history.map((h, i) => (
+                                                    <div key={i} className="text-xs bg-slate-50 border border-slate-100 text-slate-600 px-3 py-1.5 rounded-full flex items-center gap-2">
+                                                        <i data-lucide="clock" className="w-3 h-3 text-teal-600"></i>
+                                                        {h.date} · [{h.desire}] · {h.loops} {getText('loop')}
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
+                            ))}
+                        </div>
+
+                        {activeRelease && (
+                            <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm flex justify-center items-center z-50 p-4">
+                                <div className="bg-white rounded-2xl shadow-xl w-full max-w-lg p-8 relative">
+                                    <button onClick={() => setActiveRelease(null)} className="absolute top-4 right-4 text-slate-400 hover:text-slate-600">
+                                        <i data-lucide="x" className="w-5 h-5"></i>
+                                    </button>
+                                    
+                                    <div className="mb-6 text-center">
+                                        <p className="text-sm text-teal-600 font-medium">{activeRelease.text}</p>
+                                        <p className="text-xs text-slate-400 mt-1">Loop: {loopCount}</p>
+                                    </div>
+
+                                    {wizardStep === 1 && (
+                                        <div className="space-y-4">
+                                            <h3 className="text-lg text-center text-slate-700 mb-6 font-medium">
+                                                {getText('desirePrompt')}
+                                            </h3>
+                                            <button onClick={() => handleDesireSelect('control')} className="w-full p-4 border border-slate-200 rounded-xl hover:border-teal-500 hover:bg-teal-50 transition text-slate-700 font-medium">{getText('control')}</button>
+                                            <button onClick={() => handleDesireSelect('approval')} className="w-full p-4 border border-slate-200 rounded-xl hover:border-teal-500 hover:bg-teal-50 transition text-slate-700 font-medium">{getText('approval')}</button>
+                                            <button onClick={() => handleDesireSelect('security')} className="w-full p-4 border border-slate-200 rounded-xl hover:border-teal-500 hover:bg-teal-50 transition text-slate-700 font-medium">{getText('security')}</button>
+                                        </div>
+                                    )}
+
+                                    {wizardStep === 2 && (
+                                        <div className="text-center space-y-8">
+                                            <h3 className="text-lg text-slate-700 leading-relaxed">
+                                                {getText('releaseQ1')} <span className="text-teal-600 font-medium">[{currentDesire}]</span> {getText('releaseQ2')}
+                                            </h3>
+                                            <p className="text-sm text-slate-500 font-medium">{getText('hasLeft')}</p>
+                                            <div className="flex gap-4 justify-center">
+                                                <button onClick={() => handleEmotionLeft(true)} className="px-8 py-3 bg-teal-600 text-white rounded-xl hover:bg-teal-700 transition w-32 shadow-sm">{getText('yes')}</button>
+                                                <button onClick={() => handleEmotionLeft(false)} className="px-8 py-3 bg-slate-100 text-slate-600 rounded-xl hover:bg-slate-200 transition w-32">{getText('no')}</button>
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {wizardStep === 3 && (
+                                        <div className="text-center space-y-8">
+                                            <h3 className="text-xl text-slate-700">{getText('continueQ')}</h3>
+                                            <div className="flex gap-4 justify-center flex-col sm:flex-row">
+                                                <button onClick={() => handleContinue(true)} className="px-6 py-3 bg-teal-50 text-teal-700 border border-teal-100 rounded-xl hover:bg-teal-100 transition font-medium">
+                                                    {getText('yes')}
+                                                </button>
+                                                <button onClick={() => handleContinue(false)} className="px-6 py-3 bg-slate-800 text-white rounded-xl hover:bg-slate-700 transition font-medium">
+                                                    {getText('finish')}
+                                                </button>
+                                            </div>
+                                        </div>
+                                    )}
+
+                                </div>
+                            </div>
+                        )}
+
+                    </div>
+                </div>
+            );
+        }
+
+        ReactDOM.render(<App />, document.getElementById('root'));
+        setTimeout(() => { if (window.lucide) lucide.createIcons(); }, 100);
+        const iconObserver = new MutationObserver(() => { if (window.lucide) lucide.createIcons(); });
+        iconObserver.observe(document.getElementById('root'), { childList: true, subtree: true });
+    </script>
+</body>
+</html>
