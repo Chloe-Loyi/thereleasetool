@@ -1,578 +1,90 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="zh-CN">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Zen Release - 正念释放</title>
-    <!-- Tailwind CSS CDN -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <!-- React & ReactDOM & Babel CDN -->
-    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
-    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
-    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-    <!-- Supabase Auth / database client -->
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <!-- App configuration: fill these after creating your Supabase project. -->
-    <script>window.ZEN_SUPABASE_URL = "https://nnaycvczfzygdkkotbnd.supabase.co"; window.ZEN_SUPABASE_PUBLISHABLE_KEY = "sb_publishable_9EY1uaCmT37FNxNX4Y_bRA_tR1VIvbd";</script>
-    <!-- Lucide Icons -->
-    <script src="https://unpkg.com/lucide@latest"></script>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>The Releasing Tool</title>
+<style>
+:root{--teal:#0f766e;--teal2:#115e59;--ink:#1e293b;--muted:#64748b;--line:#e2e8f0;--bg:#f8fafc;--white:#fff;--red:#b91c1c;--amber:#92400e}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 system-ui,-apple-system,"Segoe UI",sans-serif}button,input{font:inherit}button{cursor:pointer;border:0;border-radius:10px;padding:10px 14px;background:#e2e8f0;color:var(--ink)}button:disabled{opacity:.55;cursor:wait}.primary{background:var(--teal);color:white}.primary:hover{background:var(--teal2)}.subtle{background:white;border:1px solid var(--line)}.danger{color:var(--red)}.wrap{max-width:900px;margin:auto;padding:22px 16px 60px}.top{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:20px}.brand{font-size:24px;color:var(--teal);font-weight:750}.tools{display:flex;gap:8px;align-items:center;flex-wrap:wrap}.card{background:white;border:1px solid var(--line);border-radius:16px;padding:20px;margin:16px 0;box-shadow:0 2px 8px #0f172a08}.muted{color:var(--muted);font-size:13px}.notice{padding:12px 14px;border-radius:10px;margin:12px 0;overflow-wrap:anywhere}.warn{background:#fffbeb;border:1px solid #fde68a;color:var(--amber)}.error{background:#fef2f2;border:1px solid #fecaca;color:var(--red)}.success{background:#f0fdfa;border:1px solid #99f6e4;color:var(--teal2)}.goalform{display:grid;grid-template-columns:1fr auto auto;gap:10px}.field{display:block;width:100%;border:1px solid var(--line);border-radius:10px;padding:11px 12px;background:#fff;color:var(--ink);min-width:0}.goal{border-left:5px solid #5eead4}.goal.expired{border-left-color:#fb923c}.goal.achieved{border-left-color:#cbd5e1;opacity:.8}.goalhead{display:flex;justify-content:space-between;gap:16px;align-items:flex-start}.goalname{font-size:18px;font-weight:650;overflow-wrap:anywhere}.actions{display:flex;gap:7px;flex-wrap:wrap}.metadata{display:flex;gap:12px;flex-wrap:wrap;color:var(--muted);font-size:12px;margin:7px 0 12px}.history{border-top:1px solid var(--line);padding-top:12px;margin-top:14px}.history-item{display:inline-block;background:#f8fafc;border:1px solid var(--line);border-radius:999px;padding:5px 10px;font-size:12px;margin:3px}.hidden{display:none!important}.authgrid{display:grid;gap:12px}.authgrid label{display:grid;gap:5px;font-size:14px}.authrow{display:flex;gap:8px}.authrow>*{flex:1}.footer{font-size:12px;color:var(--muted);text-align:center;margin-top:28px}.modalback{position:fixed;inset:0;background:#0f172a80;display:flex;align-items:center;justify-content:center;padding:16px;z-index:10}.modal{background:white;border-radius:18px;padding:24px;max-width:520px;width:100%;box-shadow:0 20px 70px #0003}.modal h2{font-size:20px;text-align:center}.modal .choice{display:block;width:100%;margin:9px 0;background:#fff;border:1px solid var(--line);padding:14px}.modal .choice:hover{border-color:var(--teal);background:#f0fdfa}.modalactions{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}.statusline{font-size:12px;color:var(--muted);margin-top:8px}
+@media(max-width:620px){.top,.goalhead{align-items:flex-start;flex-direction:column}.tools{width:100%}.goalform{grid-template-columns:1fr}.goalform button{width:100%}.card{padding:16px}.brand{font-size:22px}}
+</style>
 </head>
-<body class="bg-slate-50 text-slate-800 font-sans">
-    <div id="root"></div>
+<body>
+<main class="wrap">
+<header class="top"><div class="brand" id="brand">The Releasing Tool</div><div class="tools"><span id="userLabel" class="muted"></span><button id="backupBtn" class="subtle hidden" disabled>备份数据</button><label class="subtle hidden" id="restoreControl" style="border-radius:10px;padding:10px 14px;cursor:pointer"><span id="restoreLabel">恢复备份</span><input id="restoreInput" type="file" accept=".json,application/json" hidden></label><button id="qBtn" class="subtle hidden"></button><button id="pwBtn" class="subtle hidden"></button><button id="langBtn" class="subtle">EN</button><button id="signOutBtn" class="subtle hidden">退出登录</button></div></header>
+<div id="globalNotice" class="notice hidden" role="status"></div>
+<section class="card" id="authCard"><h2 id="authTitle" style="margin-top:0">账户登录</h2><p class="muted" id="authIntro">请登录，或注册并验证邮箱后使用 The Releasing Tool。每个账户只会读取自己的云端资料。</p><div class="authrow" style="margin:12px 0"><button id="loginModeBtn" class="primary">登录</button><button id="signupModeBtn" class="subtle">注册账户</button><button id="resetModeBtn" class="subtle">忘记密码</button></div><form id="authForm" class="authgrid"><label><span id="emailLabel">电子邮箱</span><input id="emailInput" class="field" type="email" autocapitalize="none" autocomplete="email" required></label><label id="passwordWrap"><span id="passwordLabel">密码</span><input id="passwordInput" class="field" type="password" minlength="8" autocomplete="current-password" required></label><label id="confirmWrap" class="hidden"><span id="confirmLabel">确认密码</span><input id="confirmInput" class="field" type="password" minlength="8" autocomplete="new-password"></label><button id="authSubmit" class="primary" type="submit">登录</button></form><div id="authMessage" class="notice hidden" aria-live="polite"></div><div class="statusline" id="cloudStatus">正在检查云端功能…</div></section>
+<div id="workspace" class="hidden"><section class="card"><form id="goalForm" class="goalform"><input id="goalInput" class="field" maxlength="500" placeholder="你想实现或释放什么目标？" required><input id="deadlineInput" class="field" type="date" aria-label="实现期限（可选）"><button class="primary" type="submit" id="addBtn">添加目标</button></form><p class="muted" id="goalHint">目标只保存在当前登录账户的云端。</p></section>
+<section id="goalList" aria-live="polite"></section></div><p class="footer" id="footerText">The Releasing Tool · 需要账户登录；每个账户的数据独立保存在云端。</p>
+</main>
+<div id="releaseModal" class="modalback hidden" role="dialog" aria-modal="true" aria-labelledby="modalTitle"><div class="modal"><div class="muted" id="modalGoal" style="text-align:center"></div><h2 id="modalTitle">此刻有什么核心渴望？</h2><div id="modalBody"></div><div class="modalactions" style="margin-top:18px"><button id="closeModalBtn" class="subtle">关闭</button></div></div></div>
+<div id="pwModal" class="modalback hidden" role="dialog" aria-modal="true"><div class="modal"><h2 id="pwTitle"></h2><form id="pwForm" class="authgrid"><label><span id="pwNewLabel"></span><input id="pwNew" class="field" type="password" minlength="8" autocomplete="new-password" required></label><label><span id="pwConfLabel"></span><input id="pwConf" class="field" type="password" minlength="8" autocomplete="new-password" required></label><div id="pwMsg" class="notice hidden" aria-live="polite"></div><div class="modalactions"><button class="primary" type="submit" id="pwSave"></button><button type="button" class="subtle" id="pwClose"></button></div></form></div></div>
+<div id="qModal" class="modalback hidden" role="dialog" aria-modal="true"><div class="modal"><h2 id="qTitle"></h2><p class="muted" id="qHint" style="text-align:center"></p><div id="qList" class="authgrid"></div><div id="qMsg" class="notice hidden" aria-live="polite"></div><div class="modalactions" style="margin-top:14px"><button type="button" class="subtle" id="qAddBtn"></button><button type="button" class="subtle" id="qResetBtn"></button></div><div class="modalactions" style="margin-top:10px"><button type="button" class="primary" id="qSaveBtn"></button><button type="button" class="subtle" id="qClose"></button></div></div></div>
+<script>
+(() => {
+'use strict';
+const $ = id => document.getElementById(id);
+const CONFIG = { url:'https://nnaycvczfzygdkkotbnd.supabase.co', key:'sb_publishable_9EY1uaCmT37FNxNX4Y_bRA_tR1VIvbd' };
+const copy={zh:{pw:'修改密码',pwNew:'新密码',pwConf:'确认新密码',pwSave:'保存新密码',pwDone:'密码已更新。',samePw:'新密码不能与旧密码相同。',qBtn:'自定义问句',qTitle:'自定义释放问句',qHint:'释放时会按顺序提问。用 {desire} 代表当前的核心渴望。',qAdd:'添加问句',qSave:'保存',qReset:'恢复默认',qSaved:'问句已保存。',qPlaceholder:'输入问句，例如：你现在身体哪里有感觉？',qEmpty:'至少需要一个问句。',next:'下一步',defQ:['你可以放开这个{desire}吗？','它走了吗？'],brand:'The Releasing Tool',lang:'EN',footer:'The Releasing Tool · 需要账户登录；每个账户的数据独立保存在云端。',deadlineLabel:'实现期限（可选）',close:'关闭',backup:'备份数据',restore:'恢复备份',logout:'退出登录',account:'账户登录',intro:'请登录，或注册并验证邮箱后使用 The Releasing Tool。每个账户只会读取自己的云端资料。',login:'登录',signup:'注册账户',reset:'忘记密码',email:'电子邮箱',checking:'正在检查云端功能…',created2:'账户已创建，请登录。',needEmail:'重置密码需要填写注册时使用的邮箱。',badLogin:'账号或密码不正确。',notConfirmed:'该账号尚未完成邮箱验证。',exists:'该账号已注册，请直接登录。',rate:'请求过于频繁，请稍后再试。',password:'密码',confirm:'确认密码',add:'添加目标',placeholder:'你想实现或释放什么目标？',hint:'目标只保存在当前登录账户的云端。',created:'创建于',target:'期限',none:'无期限',active:'进行中',achieved:'已实现',expired:'已逾期',mark:'已实现',release:'释放',frustration:'释放挫败感',again:'再次激活',del:'删除',history:'释放记录',loop:'次循环',control:'想要控制',approval:'想要认同',security:'想要安全',prompt:'觉察此刻的感受。现在出现了哪一种核心渴望？',q:'你可以放开这个',qend:'吗？',left:'它走了吗？',yes:'是的',no:'还没',continue:'是否要继续觉察和释放？',finish:'结束本次释放',verify:'请检查邮箱并点击验证链接，然后返回此处登录。',resetSent:'如果该邮箱已注册，系统会发送密码重置链接。',mismatch:'两次输入的密码不一致。',minpass:'密码至少需要 8 个字符。',migrate:'发现此浏览器中已有目标记录。要导入到这个账户吗？',local:'本地模式可用；云端客户端加载失败或尚未连接。',ready:'云端客户端已加载。可登录进行同步。',loading:'正在连接云端…',savefail:'云端保存失败：',loadfail:'云端读取失败：',noConfig:'Supabase 设置不完整；本地功能仍可使用。',deleteConfirm:'确定要删除这个目标吗？',invalid:'文件格式不正确：需要目标数组。',imported:'数据导入成功。',saved:'云端数据已同步。'},en:{pw:'Change password',pwNew:'New password',pwConf:'Confirm new password',pwSave:'Save new password',pwDone:'Password updated.',samePw:'The new password must differ from the old one.',qBtn:'Custom questions',qTitle:'Custom release questions',qHint:'These are asked in order during a release. Use {desire} for the current core desire.',qAdd:'Add question',qSave:'Save',qReset:'Restore defaults',qSaved:'Questions saved.',qPlaceholder:'Type a question, e.g. Where do you feel this in your body?',qEmpty:'Keep at least one question.',next:'Next',defQ:['Could you let go of {desire}?','Has it left?'],brand:'The Releasing Tool',lang:'中文',footer:'The Releasing Tool · Account login required; each account’s data is stored separately in the cloud.',deadlineLabel:'Target date (optional)',close:'Close',backup:'Backup data',restore:'Restore backup',logout:'Log out',account:'Account login required',intro:'Log in, or sign up and verify your email, to use The Releasing Tool. Each account can access only its own cloud data.',login:'Log in',signup:'Create account',reset:'Forgot password',email:'Email address',checking:'Checking cloud services…',created2:'Account created. Please log in.',needEmail:'Password reset needs the email you registered with.',badLogin:'Incorrect account or password.',notConfirmed:'This account has not been verified yet.',exists:'This account is already registered. Please log in.',rate:'Too many requests. Please try again later.',password:'Password',confirm:'Confirm password',add:'Add goal',placeholder:'What do you want to achieve or release?',hint:'Goals are saved only in the currently signed-in account’s cloud data.',created:'Created',target:'Target',none:'No deadline',active:'Active',achieved:'Achieved',expired:'Expired',mark:'Mark achieved',release:'Release',frustration:'Release frustration',again:'Activate again',del:'Delete',history:'Release history',loop:'loops',control:'Wanting control',approval:'Wanting approval',security:'Wanting security',prompt:'Notice the feeling present now. Which core desire is here?',q:'Could you let go of',qend:'?',left:'Has it left?',yes:'Yes',no:'Not yet',continue:'Would you like to continue observing and releasing?',finish:'Finish session',verify:'Check your email for the verification link, then return here to log in.',resetSent:'If the email is registered, a password reset link will be sent.',mismatch:'The passwords do not match.',minpass:'Use a password with at least 8 characters.',migrate:'Goals are saved in this browser. Import them into this account?',local:'Local mode is available; cloud client failed to load or is not connected.',ready:'Cloud client loaded. You can sign in to sync.',loading:'Connecting to cloud…',savefail:'Cloud save failed: ',loadfail:'Cloud load failed: ',noConfig:'Supabase setup is incomplete; local features remain available.',deleteConfirm:'Delete this goal?',invalid:'Invalid file: expected a goals array.',imported:'Data imported successfully.',saved:'Cloud data synced.'}};
+let lang=(()=>{try{return localStorage.getItem('rt_lang')==='en'?'en':'zh'}catch(e){return 'zh'}})(), goals=[], sb=null, user=null, authMode='login', cloudReady=false, syncing=false, active=null, step=0, desire='', loops=1, cloudEnabled=false, lastCloudError='';
+const T=k=>copy[lang][k]||k;
+const toEmail=v=>v.trim();
+const shownName=e=>e||'';
+function mapErr(err){const m=String(err&&err.message||err||'');if(/invalid login credentials/i.test(m))return T('badLogin');if(/email not confirmed/i.test(m))return T('notConfirmed');if(/already registered|already been registered/i.test(m))return T('exists');if(/rate limit|too many/i.test(m))return T('rate');if(/at least 8|should be at least/i.test(m))return T('minpass');if(/different from the old/i.test(m))return T('samePw');return m||'Authentication failed'}
+let customQ=null,qi=0,qDraft=[];
+const getQ=()=>customQ&&customQ.length?customQ:copy[lang].defQ;
+const fmtQ=q=>q.replace(/\{desire\}/g,lang==='zh'?'「'+desire+'」':'“'+desire+'”');
+let statusKey='checking',statusExtra='';
+function paintStatus(){$('cloudStatus').textContent=T(statusKey)+statusExtra}
+function setStatus(k,extra=''){statusKey=k;statusExtra=extra;paintStatus()}
 
-    <script type="text/babel">
-        const { useState, useEffect } = React;
-
-        const t = {
-            en: {
-                title: "Zen Release",
-                langToggle: "中文",
-                newGoal: "What do you want to achieve or release?",
-                deadline: "Deadline (Optional)",
-                add: "Add Goal",
-                noDeadline: "No deadline",
-                active: "Active",
-                achieved: "Achieved",
-                expired: "Expired",
-                markAchieved: "Mark Achieved",
-                release: "Release",
-                reactivate: "Activate Again",
-                frustration: "Release Frustration",
-                delete: "Delete",
-                history: "Release History",
-                created: "Created",
-                target: "Target",
-                loop: "loops",
-                desirePrompt: "Acknowledge the feeling present right now. Which core desire is present?",
-                control: "Wanting to Control",
-                approval: "Wanting Approval",
-                security: "Wanting Security",
-                releaseQ1: "Could you let go of this",
-                releaseQ2: "?",
-                hasLeft: "Has it left?",
-                yes: "Yes",
-                no: "Not yet",
-                continueQ: "Would you like to continue observing and releasing?",
-                finish: "Finish Session",
-                cycle: "Cycle",
-                time: "time",
-                backup: "Backup Data",
-                restore: "Restore Data",
-                account: "Account", signUp: "Create account", login: "Log in", email: "Email address", password: "Password", confirmPassword: "Confirm password", forgotPassword: "Forgot password?", sendReset: "Send reset email", signOut: "Log out", haveAccount: "Already have an account? Log in", needAccount: "New here? Create an account", verifySent: "Check your email for the verification link, then return here to log in.", resetSent: "If that email is registered, a password reset link has been sent.", authSetup: "Authentication setup required", authSetupText: "Add your Supabase project URL and publishable key to this file, then configure email confirmation and the redirect URL in Supabase.", setupStep1: "Create a Supabase project", setupStep2: "Run the SQL file supplied with this app in Supabase SQL Editor", setupStep3: "Set your Vercel website URL in Supabase Auth URL Configuration", setupStep4: "Replace the two YOUR_SUPABASE placeholders in index.html", signedInAs: "Signed in as", syncing: "Loading your saved goals…", cloudError: "Could not load or save your cloud data. Please check your connection and Supabase setup.", migrateLocal: "We found goals saved in this browser. Import them into your account? Choose Cancel to keep the account empty.", accountReady: "Your account is ready. Please check your email and verify the address before logging in.", authRequired: "Please log in to access your cloud-saved goals.", passwordMismatch: "The passwords do not match.", passwordLength: "Use a password with at least 8 characters.", backToLogin: "Back to log in", configMissing: "Supabase is not configured yet. Your original local app is still available below; sign-up and cloud sync will activate after setup."
-            },
-            zh: {
-                title: "正念释放",
-                langToggle: "EN",
-                newGoal: "你想实现或释放什么目标？",
-                deadline: "实现期限 (可选)",
-                add: "添加目标",
-                noDeadline: "无期限",
-                active: "进行中",
-                achieved: "已实现",
-                expired: "已逾期",
-                markAchieved: "已实现",
-                release: "释放",
-                reactivate: "再次激活",
-                frustration: "释放挫败感",
-                delete: "删除",
-                history: "释放记录",
-                created: "创建于",
-                target: "期限",
-                loop: "次循环",
-                desirePrompt: "感受此刻浮现出来什么感受，问自己可以放开这个：",
-                control: "想要控制",
-                approval: "想要认同",
-                security: "想要安全",
-                releaseQ1: "感受此刻浮现出来什么感受，问自己可以放开这个",
-                releaseQ2: "吗？",
-                hasLeft: "它走了吗？",
-                yes: "是的",
-                no: "还没",
-                continueQ: "是否要继续觉察和释放？",
-                finish: "结束本次释放",
-                cycle: "第",
-                time: "次激活",
-                backup: "备份数据",
-                restore: "恢复备份",
-                account: "账户", signUp: "注册账户", login: "登录", email: "电子邮箱", password: "密码", confirmPassword: "确认密码", forgotPassword: "忘记密码？", sendReset: "发送重置邮件", signOut: "退出登录", haveAccount: "已有账户？前往登录", needAccount: "还没有账户？立即注册", verifySent: "请检查邮箱并点击验证链接，然后返回此处登录。", resetSent: "如果该邮箱已注册，系统已发送密码重置链接。", authSetup: "需要完成身份验证设置", authSetupText: "创建 Supabase 项目后，将项目 URL 和公开密钥填入此文件，并在 Supabase 中设置邮箱验证及重定向地址。", setupStep1: "创建 Supabase 项目", setupStep2: "在 Supabase SQL Editor 执行本应用附带的 SQL 文件", setupStep3: "在 Supabase Auth URL Configuration 设置 Vercel 网站地址", setupStep4: "替换 index.html 中两个 YOUR_SUPABASE 占位值", signedInAs: "当前登录", syncing: "正在加载已保存的目标…", cloudError: "无法加载或保存云端数据，请检查网络及 Supabase 设置。", migrateLocal: "发现此浏览器中已有目标记录。要导入到此账户吗？选择取消则保持账户为空。", accountReady: "账户已创建。请检查邮箱并完成验证后再登录。", authRequired: "请先登录以访问云端保存的目标。", passwordMismatch: "两次输入的密码不一致。", passwordLength: "密码至少需要 8 个字符。", backToLogin: "返回登录", configMissing: "尚未设置 Supabase。原有本地功能仍可使用；完成设置后即可启用注册和云端同步。"
-            }
-        };
-
-        function App() {
-            const [lang, setLang] = useState('zh');
-            const [authMode, setAuthMode] = useState('login');
-            const [authEmail, setAuthEmail] = useState('');
-            const [authPassword, setAuthPassword] = useState('');
-            const [authPasswordConfirm, setAuthPasswordConfirm] = useState('');
-            const [authMessage, setAuthMessage] = useState('');
-            const [authError, setAuthError] = useState('');
-            const [authBusy, setAuthBusy] = useState(false);
-            const [authUser, setAuthUser] = useState(null);
-            const [authInitialized, setAuthInitialized] = useState(false);
-            const [cloudReady, setCloudReady] = useState(false);
-            const [cloudLoadFailed, setCloudLoadFailed] = useState(false);
-            const supabaseConfigured = !!(window.ZEN_SUPABASE_URL && window.ZEN_SUPABASE_PUBLISHABLE_KEY && !window.ZEN_SUPABASE_URL.includes('YOUR_SUPABASE') && !window.ZEN_SUPABASE_PUBLISHABLE_KEY.includes('YOUR_SUPABASE') && window.supabase);
-            const supabaseClient = React.useMemo(() => supabaseConfigured ? window.supabase.createClient(window.ZEN_SUPABASE_URL, window.ZEN_SUPABASE_PUBLISHABLE_KEY) : null, []);
-            const [goals, setGoals] = useState([]);
-            const [newGoalText, setNewGoalText] = useState('');
-            const [newGoalDate, setNewGoalDate] = useState('');
-            
-            const [activeRelease, setActiveRelease] = useState(null);
-            const [wizardStep, setWizardStep] = useState(0); 
-            const [currentDesire, setCurrentDesire] = useState('');
-            const [loopCount, setLoopCount] = useState(0);
-
-            useEffect(() => {
-                const saved = localStorage.getItem('zenGoals_local_tool');
-                if (saved) {
-                    try { setGoals(JSON.parse(saved)); } catch (e) { console.error('Could not read local Zen Release data', e); }
-                }
-            }, []);
-
-            // Keep the legacy local-only behavior when Supabase has not yet been configured.
-            // Once configured, authenticated user data is stored in the user-protected cloud table instead.
-            useEffect(() => {
-                if (!supabaseConfigured) localStorage.setItem('zenGoals_local_tool', JSON.stringify(goals));
-            }, [goals, supabaseConfigured]);
-
-            useEffect(() => {
-                if (!supabaseClient) { setAuthInitialized(true); return; }
-                let alive = true;
-                supabaseClient.auth.getSession().then(({ data, error }) => {
-                    if (!alive) return;
-                    if (error) setAuthError(error.message);
-                    setAuthUser(data?.session?.user || null);
-                    setAuthInitialized(true);
-                });
-                const { data: listener } = supabaseClient.auth.onAuthStateChange((_event, session) => {
-                    if (!alive) return;
-                    const nextUser = session?.user || null;
-                    setAuthUser(nextUser);
-                    setAuthError('');
-                    if (!nextUser) { setGoals([]); setCloudReady(false); }
-                });
-                return () => { alive = false; listener?.subscription?.unsubscribe(); };
-            }, [supabaseClient]);
-
-            useEffect(() => {
-                if (!supabaseClient || !authUser) return;
-                let cancelled = false;
-                setCloudReady(false);
-                setCloudLoadFailed(false);
-                (async () => {
-                    const { data, error } = await supabaseClient.from('zen_release_data').select('goals').eq('user_id', authUser.id).maybeSingle();
-                    if (cancelled) return;
-                    if (error) {
-                        console.error(error);
-                        setAuthError((lang === 'zh' ? '云端数据读取失败：' : 'Cloud data could not be loaded: ') + error.message);
-                        setCloudLoadFailed(true);
-                        setCloudReady(false);
-                        return;
-                    }
-                    if (data) {
-                        setGoals(Array.isArray(data.goals) ? data.goals : []);
-                    } else {
-                        let local = [];
-                        try { local = JSON.parse(localStorage.getItem('zenGoals_local_tool') || '[]'); } catch (_) {}
-                        if (Array.isArray(local) && local.length && window.confirm(getText('migrateLocal'))) {
-                            setGoals(local);
-                        } else {
-                            setGoals([]);
-                        }
-                    }
-                    setCloudReady(true);
-                })();
-                return () => { cancelled = true; };
-            }, [supabaseClient, authUser?.id]);
-
-            useEffect(() => {
-                if (!supabaseClient || !authUser || !cloudReady) return;
-                const save = async () => {
-                    const { error } = await supabaseClient.from('zen_release_data').upsert({ user_id: authUser.id, goals, updated_at: new Date().toISOString() }, { onConflict: 'user_id' });
-                    if (error) {
-                        console.error(error);
-                        setAuthError((lang === 'zh' ? '云端保存失败：' : 'Cloud save failed: ') + error.message);
-                    }
-                };
-                save();
-            }, [goals, authUser?.id, cloudReady, supabaseClient]);
-
-            const handleAuthSubmit = async (e) => {
-                e.preventDefault();
-                setAuthError(''); setAuthMessage('');
-                if (!supabaseClient) return;
-                const email = authEmail.trim();
-                if (authMode === 'signup') {
-                    if (authPassword.length < 8) { setAuthError(getText('passwordLength')); return; }
-                    if (authPassword !== authPasswordConfirm) { setAuthError(getText('passwordMismatch')); return; }
-                }
-                setAuthBusy(true);
-                try {
-                    if (authMode === 'signup') {
-                        const { error } = await supabaseClient.auth.signUp({ email, password: authPassword, options: { emailRedirectTo: window.location.origin + window.location.pathname } });
-                        if (error) throw error;
-                        setAuthMessage(getText('verifySent'));
-                        setAuthMode('login'); setAuthPassword(''); setAuthPasswordConfirm('');
-                    } else if (authMode === 'login') {
-                        const { error } = await supabaseClient.auth.signInWithPassword({ email, password: authPassword });
-                        if (error) throw error;
-                    }
-                } catch (err) { setAuthError(err.message || 'Authentication failed.'); }
-                finally { setAuthBusy(false); }
-            };
-
-            const handleSignOut = async () => {
-                if (!supabaseClient) return;
-                const { error } = await supabaseClient.auth.signOut();
-                if (error) setAuthError(error.message);
-                setGoals([]);
-            };
-
-            useEffect(() => {
-                const today = new Date().toISOString().split('T')[0];
-                setGoals(prev => prev.map(g => {
-                    if (g.status === 'active' && g.deadline && g.deadline < today) {
-                        return { ...g, status: 'expired' };
-                    }
-                    return g;
-                }));
-            }, []);
-
-            const getText = (key) => t[lang][key];
-
-            const handleAddGoal = (e) => {
-                e.preventDefault();
-                if (!newGoalText.trim()) return;
-                const newGoal = {
-                    id: Date.now().toString(),
-                    text: newGoalText,
-                    createdAt: new Date().toISOString().split('T')[0],
-                    deadline: newGoalDate || null,
-                    status: 'active',
-                    activationCount: 1,
-                    history: []
-                };
-                setGoals([newGoal, ...goals]);
-                setNewGoalText('');
-                setNewGoalDate('');
-            };
-
-            const updateGoalStatus = (id, newStatus) => {
-                setGoals(goals.map(g => g.id === id ? { ...g, status: newStatus } : g));
-            };
-
-            const reactivateGoal = (id) => {
-                setGoals(goals.map(g => {
-                    if (g.id === id) {
-                        return { 
-                            ...g, 
-                            status: 'active', 
-                            activationCount: (g.activationCount || 1) + 1,
-                            deadline: '' 
-                        };
-                    }
-                    return g;
-                }));
-            };
-
-            const deleteGoal = (id) => {
-                if (confirm(lang === 'zh' ? '确定要删除这个目标吗？' : 'Are you sure you want to delete this goal?')) {
-                    setGoals(goals.filter(g => g.id !== id));
-                }
-            };
-
-            const exportData = () => {
-                const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(goals, null, 2));
-                const downloadAnchor = document.createElement('a');
-                downloadAnchor.setAttribute("href", dataStr);
-                downloadAnchor.setAttribute("download", `zen_release_backup_${new Date().toISOString().split('T')[0]}.json`);
-                document.body.appendChild(downloadAnchor);
-                downloadAnchor.click();
-                downloadAnchor.remove();
-            };
-
-            const importData = (e) => {
-                const fileReader = new FileReader();
-                if (e.target.files[0]) {
-                    fileReader.readAsText(e.target.files[0], "UTF-8");
-                    fileReader.onload = (event) => {
-                        try {
-                            const imported = JSON.parse(event.target.result);
-                            if (Array.isArray(imported)) {
-                                setGoals(imported);
-                                alert(lang === 'zh' ? "数据导入成功！" : "Data restored successfully!");
-                            }
-                        } catch (error) {
-                            alert(lang === 'zh' ? "文件格式错误" : "Invalid file format");
-                        }
-                    };
-                }
-            };
-
-            const startRelease = (goal, presetDesire = '') => {
-                setActiveRelease(goal);
-                setCurrentDesire(presetDesire);
-                setLoopCount(1);
-                setWizardStep(presetDesire ? 2 : 1);
-            };
-
-            const handleDesireSelect = (desireKey) => {
-                setCurrentDesire(getText(desireKey));
-                setWizardStep(2);
-            };
-
-            const handleEmotionLeft = (left) => {
-                if (left) {
-                    setWizardStep(3); 
-                } else {
-                    setLoopCount(prev => prev + 1);
-                }
-            };
-
-            const handleContinue = (wantsToContinue) => {
-                if (wantsToContinue) {
-                    setLoopCount(prev => prev + 1);
-                    setWizardStep(1); 
-                    setCurrentDesire('');
-                } else {
-                    finishReleaseSession();
-                }
-            };
-
-            const finishReleaseSession = () => {
-                setGoals(goals.map(g => {
-                    if (g.id === activeRelease.id) {
-                        return {
-                            ...g,
-                            history: [{
-                                date: new Date().toISOString().split('T')[0],
-                                desire: currentDesire || 'General',
-                                loops: loopCount
-                            }, ...g.history]
-                        };
-                    }
-                    return g;
-                }));
-                setActiveRelease(null);
-                setWizardStep(0);
-            };
-
-            if (supabaseConfigured && authUser && cloudLoadFailed) {
-                return <div className="min-h-screen flex items-center justify-center p-6 bg-slate-50 text-slate-700"><div className="bg-white rounded-2xl shadow-sm border border-red-100 p-8 max-w-md w-full"><div className="text-teal-700 text-xl font-semibold mb-3">Zen Release · 正念释放</div><p role="alert" className="text-red-700 text-sm break-words">{authError}</p><p className="text-sm text-slate-500 mt-3">Check that you ran supabase-setup.sql and that your project URL and publishable key are correct.</p><button onClick={handleSignOut} className="mt-5 w-full bg-slate-800 text-white rounded-lg py-3">{getText('signOut')}</button></div></div>;
-            }
-
-            if (supabaseConfigured && (!authInitialized || (authUser && !cloudReady))) {
-                return <div className="min-h-screen flex items-center justify-center p-6 bg-slate-50 text-slate-700"><div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-8 max-w-md w-full text-center"><div className="text-teal-700 text-xl font-semibold mb-3">Zen Release · 正念释放</div><p>{getText('syncing')}</p></div></div>;
-            }
-
-            if (supabaseConfigured && !authUser) {
-                return (
-                    <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4 text-slate-800">
-                        <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-7 md:p-9 w-full max-w-md">
-                            <div className="text-center mb-7"><div className="inline-flex p-3 rounded-2xl bg-teal-50 text-teal-700 mb-3"><i data-lucide="refresh-cw" className="w-7 h-7"></i></div><h1 className="text-2xl font-semibold text-teal-700">Zen Release</h1><p className="text-sm text-slate-500 mt-2">{getText('account')}</p></div>
-                            <div className="flex gap-2 mb-6">{['login','signup'].map(mode => <button key={mode} type="button" onClick={() => {setAuthMode(mode);setAuthError('');setAuthMessage('');}} className={`flex-1 py-2 rounded-lg text-sm font-medium ${authMode===mode?'bg-teal-600 text-white':'bg-slate-100 text-slate-600'}`}>{mode==='login'?getText('login'):getText('signUp')}</button>)}</div>
-                            <form onSubmit={handleAuthSubmit} className="space-y-4">
-                                <label className="block text-sm font-medium">{getText('email')}<input type="email" required autoComplete="email" value={authEmail} onChange={e=>setAuthEmail(e.target.value)} className="mt-1 w-full bg-slate-50 border border-slate-200 rounded-lg px-4 py-3 outline-none focus:ring-2 focus:ring-teal-100" /></label>
-                                <label className="block text-sm font-medium">{getText('password')}<input type="password" required minLength="8" autoComplete={authMode==='signup'?'new-password':'current-password'} value={authPassword} onChange={e=>setAuthPassword(e.target.value)} className="mt-1 w-full bg-slate-50 border border-slate-200 rounded-lg px-4 py-3 outline-none focus:ring-2 focus:ring-teal-100" /></label>
-                                {authMode === 'signup' && <label className="block text-sm font-medium">{getText('confirmPassword')}<input type="password" required minLength="8" autoComplete="new-password" value={authPasswordConfirm} onChange={e=>setAuthPasswordConfirm(e.target.value)} className="mt-1 w-full bg-slate-50 border border-slate-200 rounded-lg px-4 py-3 outline-none focus:ring-2 focus:ring-teal-100" /></label>}
-                                {authError && <p role="alert" className="text-sm text-red-600 bg-red-50 p-3 rounded-lg break-words">{authError}</p>}
-                                {authMessage && <p role="status" className="text-sm text-teal-700 bg-teal-50 p-3 rounded-lg">{authMessage}</p>}
-                                <button disabled={authBusy} className="w-full bg-teal-600 text-white rounded-lg py-3 font-medium hover:bg-teal-700 disabled:opacity-60">{authBusy?'…':authMode==='login'?getText('login'):getText('signUp')}</button>
-                            </form>
-                            <p className="text-xs text-slate-400 text-center mt-6">Your goals and release history are private to your account.</p>
-                        </div>
-                    </div>
-                );
-            }
-
-            return (
-                <div className="min-h-screen bg-slate-50 text-slate-800 font-sans p-4 md:p-8">
-                    <div className="max-w-3xl mx-auto">
-                        
-                        <div className="flex justify-between items-center mb-8">
-                            <h1 className="text-2xl text-teal-700 tracking-wider flex items-center gap-2 font-semibold">
-                                <i data-lucide="refresh-cw" className="w-6 h-6"></i> {getText('title')}
-                            </h1>
-                            <div className="flex items-center gap-3">
-                                {authUser && <div className="hidden sm:flex items-center gap-2 text-xs text-slate-500 max-w-48"><i data-lucide="user-round" className="w-4 h-4"></i><span className="truncate" title={authUser.email}>{authUser.email}</span></div>}
-                                {authUser && <button onClick={handleSignOut} title={getText('signOut')} className="p-2 text-slate-500 hover:text-red-600 bg-white rounded-lg shadow-sm border border-slate-100 transition"><i data-lucide="log-out" className="w-4 h-4"></i></button>}
-                                <button onClick={exportData} title={getText('backup')} className="p-2 text-slate-500 hover:text-teal-600 bg-white rounded-lg shadow-sm border border-slate-100 transition">
-                                    <i data-lucide="download" className="w-4 h-4"></i>
-                                </button>
-                                <label className="p-2 text-slate-500 hover:text-teal-600 bg-white rounded-lg shadow-sm border border-slate-100 transition cursor-pointer" title={getText('restore')}>
-                                    <i data-lucide="upload" className="w-4 h-4"></i>
-                                    <input type="file" onChange={importData} accept=".json" className="hidden" />
-                                </label>
-                                <button 
-                                    onClick={() => setLang(lang === 'zh' ? 'en' : 'zh')}
-                                    className="flex items-center gap-1 text-sm bg-white px-3 py-1.5 rounded-lg shadow-sm border border-slate-100 text-slate-600 hover:text-teal-600 transition"
-                                >
-                                    <i data-lucide="globe" className="w-4 h-4"></i> {getText('langToggle')}
-                                </button>
-                            </div>
-                        </div>
-
-                        {!supabaseConfigured && <div className="mb-6 bg-amber-50 border border-amber-200 text-amber-900 rounded-xl p-4 text-sm"><strong>{getText('authSetup')}</strong><p className="mt-1">{getText('configMissing')}</p></div>}
-                        {authUser && authError && <div role="alert" className="mb-6 bg-red-50 border border-red-200 text-red-700 rounded-xl p-3 text-sm">{authError}</div>}
-                        <form onSubmit={handleAddGoal} className="bg-white p-6 rounded-xl shadow-sm border border-slate-100 mb-8 flex flex-col md:flex-row gap-4">
-                            <input
-                                type="text"
-                                value={newGoalText}
-                                onChange={(e) => setNewGoalText(e.target.value)}
-                                placeholder={getText('newGoal')}
-                                className="flex-1 bg-slate-50 border-none rounded-lg px-4 py-3 focus:ring-2 focus:ring-teal-100 outline-none text-slate-700"
-                            />
-                            <input
-                                type="date"
-                                value={newGoalDate}
-                                onChange={(e) => setNewGoalDate(e.target.value)}
-                                className="bg-slate-50 border-none rounded-lg px-4 py-3 focus:ring-2 focus:ring-teal-100 outline-none text-slate-500"
-                                title={getText('deadline')}
-                            />
-                            <button type="submit" className="bg-teal-600 text-white px-6 py-3 rounded-lg hover:bg-teal-700 transition flex justify-center items-center gap-2">
-                                <i data-lucide="plus" className="w-5 h-5"></i> {getText('add')}
-                            </button>
-                        </form>
-
-                        <div className="space-y-6">
-                            {goals.map(goal => (
-                                <div key={goal.id} className={`bg-white p-6 rounded-xl shadow-sm border-l-4 transition ${
-                                    goal.status === 'active' ? 'border-teal-400' : 
-                                    goal.status === 'expired' ? 'border-orange-400' : 'border-slate-300 opacity-70'
-                                }`}>
-                                    
-                                    <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-4">
-                                        <div>
-                                            <h3 className="text-lg font-medium text-slate-800">{goal.text}</h3>
-                                            <div className="flex flex-wrap gap-4 text-xs text-slate-400 mt-2">
-                                                <span className="flex items-center gap-1"><i data-lucide="calendar" className="w-3 h-3"></i> {getText('created')}: {goal.createdAt}</span>
-                                                <span className="flex items-center gap-1">
-                                                    <i data-lucide="target" className="w-3 h-3"></i> {getText('target')}: {goal.deadline ? goal.deadline : getText('noDeadline')}
-                                                </span>
-                                                {goal.activationCount > 1 && (
-                                                    <span className="text-teal-600 bg-teal-50 px-2 py-0.5 rounded font-medium">
-                                                        {lang === 'zh' ? `${getText('cycle')}${goal.activationCount}${getText('time')}` : `${getText('time')} ${goal.activationCount}`}
-                                                    </span>
-                                                )}
-                                                {goal.status === 'expired' && (
-                                                    <span className="text-orange-600 bg-orange-50 px-2 py-0.5 rounded font-medium">
-                                                        {lang === 'zh' ? '已逾期' : 'Expired'}
-                                                    </span>
-                                                )}
-                                            </div>
-                                        </div>
-                                        
-                                        <div className="flex flex-wrap items-center gap-2">
-                                            {goal.status === 'active' && (
-                                                <>
-                                                    <button onClick={() => updateGoalStatus(goal.id, 'achieved')} className="px-3 py-1.5 text-sm bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-lg flex items-center gap-1 transition">
-                                                        <i data-lucide="check" className="w-4 h-4"></i> {getText('markAchieved')}
-                                                    </button>
-                                                    <button onClick={() => startRelease(goal)} className="px-4 py-1.5 text-sm bg-teal-50 text-teal-700 hover:bg-teal-100 rounded-lg flex items-center gap-1 transition">
-                                                        <i data-lucide="refresh-cw" className="w-4 h-4"></i> {getText('release')}
-                                                    </button>
-                                                </>
-                                            )}
-                                            {goal.status === 'expired' && (
-                                                <>
-                                                    <button onClick={() => startRelease(goal, 'control')} className="px-3 py-1.5 text-sm bg-orange-50 text-orange-700 hover:bg-orange-100 rounded-lg transition font-medium">
-                                                        {getText('frustration')}
-                                                    </button>
-                                                    <button onClick={() => reactivateGoal(goal.id)} className="px-3 py-1.5 text-sm bg-teal-50 text-teal-700 hover:bg-teal-100 rounded-lg transition font-medium">
-                                                        {getText('reactivate')}
-                                                    </button>
-                                                </>
-                                            )}
-                                            {goal.status === 'achieved' && (
-                                                <span className="px-3 py-1.5 text-sm bg-teal-50 text-teal-700 rounded-lg font-medium">{getText('achieved')}</span>
-                                            )}
-                                            {/* 删除按钮 */}
-                                            <button onClick={() => deleteGoal(goal.id)} className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition" title={getText('delete')}>
-                                                <i data-lucide="trash-2" className="w-4 h-4"></i>
-                                            </button>
-                                        </div>
-                                    </div>
-
-                                    {goal.history.length > 0 && (
-                                        <div className="mt-4 pt-4 border-t border-slate-100">
-                                            <p className="text-xs font-medium text-slate-400 mb-3 uppercase tracking-wider">{getText('history')}</p>
-                                            <div className="flex flex-wrap gap-2">
-                                                {goal.history.map((h, i) => (
-                                                    <div key={i} className="text-xs bg-slate-50 border border-slate-100 text-slate-600 px-3 py-1.5 rounded-full flex items-center gap-2">
-                                                        <i data-lucide="clock" className="w-3 h-3 text-teal-600"></i>
-                                                        {h.date} · [{h.desire}] · {h.loops} {getText('loop')}
-                                                    </div>
-                                                ))}
-                                            </div>
-                                        </div>
-                                    )}
-                                </div>
-                            ))}
-                        </div>
-
-                        {activeRelease && (
-                            <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm flex justify-center items-center z-50 p-4">
-                                <div className="bg-white rounded-2xl shadow-xl w-full max-w-lg p-8 relative">
-                                    <button onClick={() => setActiveRelease(null)} className="absolute top-4 right-4 text-slate-400 hover:text-slate-600">
-                                        <i data-lucide="x" className="w-5 h-5"></i>
-                                    </button>
-                                    
-                                    <div className="mb-6 text-center">
-                                        <p className="text-sm text-teal-600 font-medium">{activeRelease.text}</p>
-                                        <p className="text-xs text-slate-400 mt-1">Loop: {loopCount}</p>
-                                    </div>
-
-                                    {wizardStep === 1 && (
-                                        <div className="space-y-4">
-                                            <h3 className="text-lg text-center text-slate-700 mb-6 font-medium">
-                                                {getText('desirePrompt')}
-                                            </h3>
-                                            <button onClick={() => handleDesireSelect('control')} className="w-full p-4 border border-slate-200 rounded-xl hover:border-teal-500 hover:bg-teal-50 transition text-slate-700 font-medium">{getText('control')}</button>
-                                            <button onClick={() => handleDesireSelect('approval')} className="w-full p-4 border border-slate-200 rounded-xl hover:border-teal-500 hover:bg-teal-50 transition text-slate-700 font-medium">{getText('approval')}</button>
-                                            <button onClick={() => handleDesireSelect('security')} className="w-full p-4 border border-slate-200 rounded-xl hover:border-teal-500 hover:bg-teal-50 transition text-slate-700 font-medium">{getText('security')}</button>
-                                        </div>
-                                    )}
-
-                                    {wizardStep === 2 && (
-                                        <div className="text-center space-y-8">
-                                            <h3 className="text-lg text-slate-700 leading-relaxed">
-                                                {getText('releaseQ1')} <span className="text-teal-600 font-medium">[{currentDesire}]</span> {getText('releaseQ2')}
-                                            </h3>
-                                            <p className="text-sm text-slate-500 font-medium">{getText('hasLeft')}</p>
-                                            <div className="flex gap-4 justify-center">
-                                                <button onClick={() => handleEmotionLeft(true)} className="px-8 py-3 bg-teal-600 text-white rounded-xl hover:bg-teal-700 transition w-32 shadow-sm">{getText('yes')}</button>
-                                                <button onClick={() => handleEmotionLeft(false)} className="px-8 py-3 bg-slate-100 text-slate-600 rounded-xl hover:bg-slate-200 transition w-32">{getText('no')}</button>
-                                            </div>
-                                        </div>
-                                    )}
-
-                                    {wizardStep === 3 && (
-                                        <div className="text-center space-y-8">
-                                            <h3 className="text-xl text-slate-700">{getText('continueQ')}</h3>
-                                            <div className="flex gap-4 justify-center flex-col sm:flex-row">
-                                                <button onClick={() => handleContinue(true)} className="px-6 py-3 bg-teal-50 text-teal-700 border border-teal-100 rounded-xl hover:bg-teal-100 transition font-medium">
-                                                    {getText('yes')}
-                                                </button>
-                                                <button onClick={() => handleContinue(false)} className="px-6 py-3 bg-slate-800 text-white rounded-xl hover:bg-slate-700 transition font-medium">
-                                                    {getText('finish')}
-                                                </button>
-                                            </div>
-                                        </div>
-                                    )}
-
-                                </div>
-                            </div>
-                        )}
-
-                    </div>
-                </div>
-            );
-        }
-
-        ReactDOM.render(<App />, document.getElementById('root'));
-        setTimeout(() => { if (window.lucide) lucide.createIcons(); }, 100);
-        const iconObserver = new MutationObserver(() => { if (window.lucide) lucide.createIcons(); });
-        iconObserver.observe(document.getElementById('root'), { childList: true, subtree: true });
-    </script>
-</body>
-</html>
+function showNotice(message,type='warn',target='globalNotice'){const el=$(target);el.textContent=message;el.className='notice '+type;}
+function clearNotice(target='globalNotice'){const el=$(target);el.textContent='';el.className='notice hidden';}
+function localSave(){/* Deliberately disabled: private user data must not be stored in shared browser-local state. */}
+function updateAccessUI(){const canUse=!!(user&&cloudReady);$('workspace').classList.toggle('hidden',!canUse);$('backupBtn').classList.toggle('hidden',!canUse);$('backupBtn').disabled=!canUse;$('restoreInput').disabled=!canUse;$('restoreControl').classList.toggle('hidden',!canUse);$('restoreControl').setAttribute('aria-hidden',String(!canUse));$('authCard').classList.toggle('hidden',canUse);$('authForm').classList.toggle('hidden',!!user);$('loginModeBtn').classList.toggle('hidden',!!user);$('signupModeBtn').classList.toggle('hidden',!!user);$('resetModeBtn').classList.toggle('hidden',!!user);$('signOutBtn').classList.toggle('hidden',!user);$('pwBtn').classList.toggle('hidden',!canUse);$('qBtn').classList.toggle('hidden',!canUse);if(user&&!cloudReady){$('authTitle').textContent=lang==='zh'?'正在加载账户资料':'Loading account data';$('authIntro').textContent=lang==='zh'?'正在读取此账户的云端资料，请稍候。':'Loading this account’s cloud data. Please wait.';}else{$('authTitle').textContent=T('account');$('authIntro').textContent=T('intro');}}
+function normalizeGoal(g){return {id:String(g.id||Date.now()+Math.random()),text:String(g.text||''),createdAt:g.createdAt||new Date().toISOString().slice(0,10),deadline:g.deadline||null,status:['active','achieved','expired'].includes(g.status)?g.status:'active',activationCount:Number(g.activationCount||1),history:Array.isArray(g.history)?g.history:[]}}
+function render(){ $('brand').textContent=T('brand');$('langBtn').textContent=T('lang');$('backupBtn').textContent=T('backup');$('footerText') && ($('footerText').textContent=T('footer'));$('deadlineInput').setAttribute('aria-label',T('deadlineLabel'));$('closeModalBtn').textContent=T('close');$('restoreLabel').textContent=T('restore');$('signOutBtn').textContent=T('logout');$('pwBtn').textContent=T('pw');$('qBtn').textContent=T('qBtn');$('pwTitle').textContent=T('pw');$('pwNewLabel').textContent=T('pwNew');$('pwConfLabel').textContent=T('pwConf');$('pwSave').textContent=T('pwSave');$('pwClose').textContent=T('close');$('qTitle').textContent=T('qTitle');$('qHint').textContent=T('qHint');$('qAddBtn').textContent=T('qAdd');$('qResetBtn').textContent=T('qReset');$('qSaveBtn').textContent=T('qSave');$('qClose').textContent=T('close');document.querySelectorAll('#qList input').forEach(i=>i.placeholder=T('qPlaceholder'));$('authTitle').textContent=T('account');$('authIntro').textContent=T('intro');$('loginModeBtn').textContent=T('login');$('signupModeBtn').textContent=T('signup');$('resetModeBtn').textContent=T('reset');$('emailLabel').textContent=T('email');$('passwordLabel').textContent=T('password');$('confirmLabel').textContent=T('confirm');$('authSubmit').textContent=authMode==='signup'?T('signup'):authMode==='reset'?T('reset'):T('login');$('addBtn').textContent=T('add');$('goalInput').placeholder=T('placeholder');$('goalHint').textContent=T('hint');$('confirmWrap').classList.toggle('hidden',authMode!=='signup');$('passwordWrap').classList.toggle('hidden',authMode==='reset');$('passwordInput').required=authMode!=='reset';$('confirmInput').required=authMode==='signup';$('signOutBtn').classList.toggle('hidden',!user);$('userLabel').textContent=user?(shownName(user.email)||'Signed in'):'';paintStatus();
+ const list=$('goalList');list.innerHTML='';if(!goals.length){const empty=document.createElement('div');empty.className='card muted';empty.textContent=lang==='zh'?'还没有目标。添加一个目标，开始你的释放练习。':'No goals yet. Add one to begin.';list.append(empty)}
+ goals.forEach(g=>{const card=document.createElement('article');card.className='card goal '+(g.status==='expired'?'expired':g.status==='achieved'?'achieved':'');const head=document.createElement('div');head.className='goalhead';const info=document.createElement('div');info.style.minWidth='0';const name=document.createElement('div');name.className='goalname';name.textContent=g.text;const meta=document.createElement('div');meta.className='metadata';[`${T('created')}: ${g.createdAt}`,`${T('target')}: ${g.deadline||T('none')}`,g.status==='active'?T('active'):g.status==='expired'?T('expired'):T('achieved'),g.activationCount>1?`${lang==='zh'?'第':''}${g.activationCount}${lang==='zh'?'次激活':' activations'}`:''].filter(Boolean).forEach(s=>{const span=document.createElement('span');span.textContent=s;meta.append(span)});info.append(name,meta);const actions=document.createElement('div');actions.className='actions';if(g.status==='active'){actions.append(btn(T('mark'),'subtle',()=>updateStatus(g.id,'achieved')),btn(T('release'),'primary',()=>startRelease(g,'')))}if(g.status==='expired'){actions.append(btn(T('frustration'),'subtle',()=>startRelease(g,'control')),btn(T('again'),'subtle',()=>reactivate(g.id)))}if(g.status==='achieved'){const span=document.createElement('span');span.className='muted';span.textContent=T('achieved');actions.append(span)}actions.append(btn(T('del'),'subtle danger',()=>deleteGoal(g.id)));head.append(info,actions);card.append(head);if(g.history.length){const hist=document.createElement('div');hist.className='history';const title=document.createElement('div');title.className='muted';title.textContent=T('history');hist.append(title);g.history.forEach(h=>{const item=document.createElement('span');item.className='history-item';item.textContent=`${h.date||''} · [${h.desire||''}] · ${h.loops||1} ${T('loop')}`;hist.append(item)});card.append(hist)}list.append(card)});updateAccessUI();
+}
+function btn(text,cls,fn){const b=document.createElement('button');b.type='button';b.className=cls;b.textContent=text;b.addEventListener('click',fn);return b}
+function persist(){if(!user||!cloudReady){showNotice(lang==='zh'?'请先登录并完成云端加载。':'Please log in and wait for cloud data to load.','error');return}render();if(sb)queueCloudSave()}
+function updateStatus(id,status){goals=goals.map(g=>g.id===id?{...g,status}:g);persist()}
+function reactivate(id){goals=goals.map(g=>g.id===id?{...g,status:'active',activationCount:(g.activationCount||1)+1,deadline:null}:g);persist()}
+function deleteGoal(id){if(confirm(T('deleteConfirm'))){goals=goals.filter(g=>g.id!==id);persist()}}
+$('goalForm').addEventListener('submit',e=>{e.preventDefault();const text=$('goalInput').value.trim();if(!text)return;goals.unshift({id:String(Date.now()),text,createdAt:new Date().toISOString().slice(0,10),deadline:$('deadlineInput').value||null,status:'active',activationCount:1,history:[]});$('goalInput').value='';$('deadlineInput').value='';persist()});
+$('langBtn').addEventListener('click',()=>{lang=lang==='zh'?'en':'zh';try{localStorage.setItem('rt_lang',lang)}catch(e){}document.documentElement.lang=lang==='zh'?'zh-CN':'en';clearNotice('globalNotice');clearNotice('authMessage');render();if(active)renderModal()});
+$('backupBtn').addEventListener('click',()=>{if(!user||!cloudReady)return;const blob=new Blob([JSON.stringify(goals,null,2)],{type:'application/json'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download='the_releasing_tool_backup_'+new Date().toISOString().slice(0,10)+'.json';a.click();URL.revokeObjectURL(url)});
+$('restoreInput').addEventListener('change',async e=>{if(!user||!cloudReady){e.target.value='';return}const f=e.target.files?.[0];if(!f)return;try{const parsed=JSON.parse(await f.text());if(!Array.isArray(parsed))throw new Error(T('invalid'));goals=parsed.map(normalizeGoal);persist();showNotice(T('imported'),'success')}catch(err){showNotice(err.message||T('invalid'),'error')}e.target.value=''});
+function startRelease(goal,preset){active=goal;desire=preset?T(preset):'';loops=1;qi=0;step=preset?2:1;renderModal();$('releaseModal').classList.remove('hidden')}
+function renderModal(){if(!active)return;const Q=getQ();if(qi>=Q.length)qi=0;$('modalGoal').textContent=active.text;$('modalTitle').textContent=step===1?T('prompt'):step===2?fmtQ(Q[qi]):T('continue');const body=$('modalBody');body.innerHTML='';if(step===1){[ ['control',T('control')],['approval',T('approval')],['security',T('security')] ].forEach(([k,label])=>body.append(btn(label,'choice',()=>{desire=T(k);step=2;qi=0;renderModal()})))}else if(step===2){const row=document.createElement('div');row.className='modalactions';row.append(btn(T('next'),'primary',()=>{qi++;if(qi>=Q.length){step=3;qi=0}renderModal()}));body.append(row)}else{const p=document.createElement('p');p.style.textAlign='center';p.textContent=(lang==='zh'?'第':'Loop ')+loops+(lang==='zh'?' 次':'');body.append(p);const row=document.createElement('div');row.className='modalactions';row.append(btn(T('yes'),'primary',()=>{loops++;step=2;qi=0;renderModal()}),btn(T('finish'),'subtle',finishRelease));body.append(row)}}
+function finishRelease(){if(active){const h={date:new Date().toISOString().slice(0,10),desire,loops};goals=goals.map(g=>g.id===active.id?{...g,history:[...(g.history||[]),h]}:g);persist()}active=null;$('releaseModal').classList.add('hidden')}
+$('closeModalBtn').addEventListener('click',()=>{$('releaseModal').classList.add('hidden');active=null});$('releaseModal').addEventListener('click',e=>{if(e.target===$('releaseModal')){$('releaseModal').classList.add('hidden');active=null}});
+function setAuthMode(mode){authMode=mode;clearNotice('authMessage');render()}
+$('loginModeBtn').onclick=()=>setAuthMode('login');$('signupModeBtn').onclick=()=>setAuthMode('signup');$('resetModeBtn').onclick=()=>setAuthMode('reset');
+$('authForm').addEventListener('submit',async e=>{e.preventDefault();clearNotice('authMessage');if(!sb){showNotice(lang==='zh'?'云端服务暂时不可用，请检查网络后重试。':'Cloud service is unavailable. Check your connection and try again.','warn','authMessage');return}const raw=$('emailInput').value.trim(),email=toEmail(raw),password=$('passwordInput').value,confirmPass=$('confirmInput').value;const submit=$('authSubmit');submit.disabled=true;try{let result;if(authMode==='signup'){if(password.length<8)throw new Error(T('minpass'));if(password!==confirmPass)throw new Error(T('mismatch'));result=await withTimeout(sb.auth.signUp({email,password,options:{emailRedirectTo:location.origin+location.pathname}}),12000,'Sign-up request timed out');if(result.error)throw result.error;if(result.data&&result.data.session){user=result.data.user||result.data.session.user;await loadCloudGoals(false);render();return}setAuthMode('login');showNotice(T('verify'),'success','authMessage')}else if(authMode==='reset'){result=await withTimeout(sb.auth.resetPasswordForEmail(email,{redirectTo:location.origin+location.pathname}),12000,'Password reset request timed out');if(result.error)throw result.error;showNotice(T('resetSent'),'success','authMessage')}else{result=await withTimeout(sb.auth.signInWithPassword({email,password}),12000,'Login request timed out');if(result.error)throw result.error;user=result.data.user||null;if(user)await loadCloudGoals(false);render();if(user&&cloudReady)showNotice(T('saved'),'success','authMessage')}}catch(err){showNotice(mapErr(err),'error','authMessage')}finally{submit.disabled=false}});
+$('signOutBtn').addEventListener('click',async()=>{try{if(sb)await withTimeout(sb.auth.signOut(),10000,'Sign-out timed out')}catch(e){showNotice(e.message,'error')}user=null;customQ=null;cloudReady=false;goals=[];render();updateAccessUI()});
+function withTimeout(p,ms,msg){return Promise.race([p,new Promise((_,reject)=>setTimeout(()=>reject(new Error(msg)),ms))])}
+let saveTimer=null;function queueCloudSave(){clearTimeout(saveTimer);saveTimer=setTimeout(async()=>{if(!sb||!user||!cloudReady)return;try{const {error}=await withTimeout(sb.from('zen_release_data').upsert({user_id:user.id,goals,updated_at:new Date().toISOString()},{onConflict:'user_id'}),12000,'Cloud save timed out');if(error)throw error;lastCloudError='';setStatus('saved')}catch(e){lastCloudError=e.message;showNotice(T('savefail')+e.message,'error');setStatus('savefail',e.message)}},500)}
+async function loadCloudGoals(askImport){if(!sb||!user)return;cloudReady=false;{const q=user.user_metadata&&user.user_metadata.questions;customQ=Array.isArray(q)&&q.length?q.map(String):null}setStatus('loading');try{const {data,error}=await withTimeout(sb.from('zen_release_data').select('goals').eq('user_id',user.id).maybeSingle(),12000,'Cloud data request timed out');if(error)throw error;if(data){goals=Array.isArray(data.goals)?data.goals.map(normalizeGoal):[]}else{goals=[]}cloudReady=true;render();updateAccessUI();queueCloudSave();setStatus('ready')}catch(e){cloudReady=false;showNotice(T('loadfail')+e.message,'error');setStatus('loadfail',e.message)}}
+function initCloud(){const hasConfig=CONFIG.url.startsWith('https://')&&CONFIG.key&& !CONFIG.key.includes('YOUR_');if(!hasConfig){setStatus('noConfig');return}const script=document.createElement('script');script.src='https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js';script.onload=async()=>{try{const lib=window.supabase;if(!lib||!lib.createClient)throw new Error('Supabase client library did not expose createClient');sb=lib.createClient(CONFIG.url,CONFIG.key,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});setStatus('ready');const result=await withTimeout(sb.auth.getSession(),8000,'Session check timed out');if(result.error)throw result.error;user=result.data.session?.user||null;if(user)await loadCloudGoals(false);else{goals=[];cloudReady=false;render();updateAccessUI()}sb.auth.onAuthStateChange((event,session)=>{const next=session?.user||null;if(next?.id===user?.id)return;user=next;cloudReady=false;if(!user){goals=[];render();updateAccessUI()}else{goals=[];render();updateAccessUI();loadCloudGoals(false)}})}catch(e){console.error(e);setStatus('local',' ('+e.message+')');showNotice((lang==='zh'?'云端连接失败，暂时无法使用。':'Cloud connection failed; the app is locked until it works.')+' '+e.message,'error');user=null;cloudReady=false;goals=[];updateAccessUI()}};script.onerror=()=>{setStatus('local');showNotice(lang==='zh'?'无法加载云端客户端，请检查网络后刷新。':'Could not load the cloud client. Check your connection and refresh.','error');user=null;cloudReady=false;goals=[];updateAccessUI()};document.head.append(script);setTimeout(()=>{if(!sb){setStatus('local');showNotice(lang==='zh'?'云端客户端加载超时，请检查网络后刷新。':'Cloud client timed out. Check your connection and refresh.','error');updateAccessUI()}},10000)}
+// ---- change password ----
+function openModal(id){$(id).classList.remove('hidden')}
+function closeModal(id){$(id).classList.add('hidden')}
+$('pwBtn').addEventListener('click',()=>{$('pwNew').value='';$('pwConf').value='';clearNotice('pwMsg');openModal('pwModal')});
+$('pwClose').addEventListener('click',()=>closeModal('pwModal'));
+$('pwModal').addEventListener('click',e=>{if(e.target===$('pwModal'))closeModal('pwModal')});
+$('pwForm').addEventListener('submit',async e=>{e.preventDefault();clearNotice('pwMsg');const p1=$('pwNew').value,p2=$('pwConf').value,b=$('pwSave');b.disabled=true;try{if(!sb||!user)throw new Error(lang==='zh'?'请先登录。':'Please log in first.');if(p1.length<8)throw new Error(T('minpass'));if(p1!==p2)throw new Error(T('mismatch'));const r=await withTimeout(sb.auth.updateUser({password:p1}),12000,'Password update timed out');if(r.error)throw r.error;if(r.data&&r.data.user)user=r.data.user;$('pwNew').value='';$('pwConf').value='';showNotice(T('pwDone'),'success','pwMsg')}catch(err){showNotice(mapErr(err),'error','pwMsg')}finally{b.disabled=false}});
+// ---- custom questions ----
+function renderQEditor(){const box=$('qList');box.innerHTML='';qDraft.forEach((q,i)=>{const row=document.createElement('div');row.className='authrow';const inp=document.createElement('input');inp.className='field';inp.maxLength=200;inp.value=q;inp.placeholder=T('qPlaceholder');inp.addEventListener('input',()=>{qDraft[i]=inp.value});const del=btn('✕','subtle danger',()=>{qDraft.splice(i,1);renderQEditor()});del.style.flex='0 0 auto';del.setAttribute('aria-label',T('del'));row.append(inp,del);box.append(row)})}
+$('qBtn').addEventListener('click',()=>{qDraft=getQ().slice();clearNotice('qMsg');renderQEditor();openModal('qModal')});
+$('qClose').addEventListener('click',()=>closeModal('qModal'));
+$('qModal').addEventListener('click',e=>{if(e.target===$('qModal'))closeModal('qModal')});
+$('qAddBtn').addEventListener('click',()=>{qDraft.push('');renderQEditor();const ins=$('qList').querySelectorAll('input');if(ins.length)ins[ins.length-1].focus()});
+async function saveQuestions(value){if(!sb||!user)throw new Error(lang==='zh'?'请先登录。':'Please log in first.');const r=await withTimeout(sb.auth.updateUser({data:{questions:value}}),12000,'Save timed out');if(r.error)throw r.error;if(r.data&&r.data.user)user=r.data.user;customQ=value}
+$('qSaveBtn').addEventListener('click',async()=>{clearNotice('qMsg');const clean=qDraft.map(x=>x.trim()).filter(Boolean);if(!clean.length){showNotice(T('qEmpty'),'error','qMsg');return}const b=$('qSaveBtn');b.disabled=true;try{await saveQuestions(clean);qDraft=clean.slice();renderQEditor();showNotice(T('qSaved'),'success','qMsg')}catch(err){showNotice(mapErr(err),'error','qMsg')}finally{b.disabled=false}});
+$('qResetBtn').addEventListener('click',async()=>{clearNotice('qMsg');const b=$('qResetBtn');b.disabled=true;try{await saveQuestions(null);qDraft=getQ().slice();renderQEditor();showNotice(T('qSaved'),'success','qMsg')}catch(err){showNotice(mapErr(err),'error','qMsg')}finally{b.disabled=false}});
+// Render the core app immediately, before any remote script/network request.
+document.documentElement.lang=lang==='zh'?'zh-CN':'en';goals=[];render();updateAccessUI();initCloud();
+})();
+</script>
+</body></html>
